@@ -1,0 +1,32 @@
+{
+  "services": [
+    {
+      "id": "1",
+      "category": "hair",
+      "name": "Style Cut",
+      "duration": 30,
+      "price": 60
+    },
+    {
+      "id": "2",
+      "category": "hair",
+      "name": "Head Shave",
+      "duration": 60,
+      "price": 80
+    },
+    {
+      "id": "3",
+      "category": "hair",
+      "name": "Fade Cut",
+      "duration": 90,
+      "price": 100
+    },
+    {
+      "id": "4",
+      "category": "hair",
+      "name": "Kids Cut",
+      "duration": 120,
+      "price": 120
+    }
+  ]
+}
