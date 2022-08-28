@@ -1,4 +1,4 @@
-import "./custom_checkbox.css";
+import "../style/custom_checkbox.css";
 import { useEffect, useState } from "react";
 import {
   animated,
@@ -9,10 +9,16 @@ import {
 } from "react-spring";
 
 import React from "react";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  selectService,
+  removeService,
+  selectedServices as selectedServicesSelector,
+} from "../../../features/booking/bookingSlice";
 
 export default function ServiceCard(props) {
-  const { isSelected, onChanged, service } = props;
-  const [isChecked, setIsChecked] = useState(isSelected ?? false);
+  const { service } = props;
+  const [isChecked, setIsChecked] = useState(false);
   const checkboxAnimationRef = useSpringRef();
   const checkboxAnimationStyle = useSpring({
     backgroundColor: isChecked ? "rgb(3, 122, 255)" : "#fff",
@@ -22,11 +28,24 @@ export default function ServiceCard(props) {
     ref: checkboxAnimationRef,
   });
 
+  const dispatch = useDispatch();
+  const selectedServices = useSelector(selectedServicesSelector);
+
   useEffect(() => {
-    if (onChanged) {
-      onChanged(isChecked, service);
+    if (isChecked) {
+      dispatch(selectService(service));
+    } else {
+      dispatch(removeService(service));
     }
   }, [isChecked]);
+
+  useEffect(() => {
+    if (selectedServices.filter((s) => service.id == s.id).length > 0) {
+      setIsChecked(true);
+    } else {
+      setIsChecked(false);
+    }
+  }, []);
 
   const CustomCheckBox = () => {
     return (
@@ -98,7 +117,9 @@ export default function ServiceCard(props) {
             </div>
           </div>
           <div>
-            <span className="font-bold text-lg">AED {service.price ?? 80}</span>
+            <span className="font-bold text-lg">
+              AED {service.amount ?? 80}
+            </span>
           </div>
         </div>
       </div>

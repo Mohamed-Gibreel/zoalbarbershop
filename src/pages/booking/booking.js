@@ -1,36 +1,61 @@
 import React, { useEffect, useState } from "react";
 import ScrollSpyTabs from "./ScrollSpyTabs";
-import ServiceSection from "./sections/section";
-import services from "../../sample-data/services.json";
+import ServiceSection from "./sections/service_section";
+import { getServies } from "../../config/axios/axios";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  allServices as allServicesSelector,
+  setAllServices,
+} from "../../features/booking/bookingSlice";
 
 export default function Booking() {
-  const [selectedServices, setSelectedServices] = useState([]);
+  const allServices = useSelector(allServicesSelector);
+  const [services, setServices] = useState([]);
+
+  const dispatch = useDispatch();
 
   useEffect(() => {
-    console.log("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-");
-    console.log(selectedServices);
-    console.log("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-");
-  }, [selectedServices]);
-
-  const handleChange = (value, service) => {
-    if (value) {
-      handleAddService(service);
-    } else {
-      handleRemoveService(service);
+    if (allServices.length == 0) {
+      fetchServices();
     }
+    window.addEventListener("beforeunload", alertUser);
+    return () => {
+      window.removeEventListener("beforeunload", alertUser);
+    };
+  }, []);
+  const alertUser = (e) => {
+    e.preventDefault();
+    e.returnValue = "";
   };
 
-  const handleAddService = (service) => {
-    //TODO: Handle add servce logic here.
-    setSelectedServices([...selectedServices, service]);
-  };
+  useEffect(() => {
+    let formattedServices = [];
+    Object.entries(allServices).forEach(([key, value]) => {
+      formattedServices.push({
+        text: value[0].category.name,
+        component: (
+          <ServiceSection
+            key={key}
+            section={{
+              title: value[0].category.name,
+              services: value,
+            }}
+          />
+        ),
+      });
+    });
+    setServices(formattedServices);
+  }, [allServices]);
 
-  const handleRemoveService = (service) => {
-    //TODO: Handle remove servce logic here.
-    var filteredServices = [...selectedServices].filter(
-      (s) => s.id != service.id
-    );
-    setSelectedServices([...filteredServices]);
+  const fetchServices = async () => {
+    var res = await (await getServies()).data.results;
+    var fetchedServices = res.reduce(function (results, service) {
+      (results[service.category.id] = results[service.category.id] || []).push(
+        service
+      );
+      return results;
+    }, {});
+    dispatch(setAllServices(fetchedServices));
   };
 
   return (
@@ -41,124 +66,7 @@ export default function Booking() {
         backgroundColor: "#fff",
       }}
     >
-      <ScrollSpyTabs
-        tabsInScroll={[
-          {
-            text: "Featured",
-            component: (
-              <ServiceSection
-                section={{ title: "Featured", services: services.services }}
-                onSelected={handleChange}
-              />
-            ),
-          },
-          {
-            text: "Hair",
-            component: (
-              <ServiceSection
-                section={{ title: "Hair", services: services.services }}
-                onSelected={handleChange}
-              />
-            ),
-          },
-          {
-            text: "Beard",
-            component: (
-              <ServiceSection
-                section={{ title: "Beard", services: services.services }}
-                onSelected={handleChange}
-              />
-            ),
-          },
-          {
-            text: "Beard-2",
-            component: (
-              <ServiceSection
-                section={{ title: "Beard 2", services: services.services }}
-                onSelected={handleChange}
-              />
-            ),
-          },
-          {
-            text: "Blow Dry",
-            component: (
-              <ServiceSection
-                section={{ title: "Blow Dry", services: services.services }}
-                onSelected={handleChange}
-              />
-            ),
-          },
-          {
-            text: "Hair Color",
-            component: (
-              <ServiceSection
-                section={{ title: "Hair Color", services: services.services }}
-                onSelected={handleChange}
-              />
-            ),
-          },
-          {
-            text: "Facial Treatment",
-            component: (
-              <ServiceSection
-                section={{
-                  title: "Facial Treatment",
-                  services: services.services,
-                }}
-                onSelected={handleChange}
-              />
-            ),
-          },
-          {
-            text: "Treatments",
-            component: (
-              <ServiceSection
-                section={{ title: "Treatments", services: services.services }}
-                onSelected={handleChange}
-              />
-            ),
-          },
-          {
-            text: "Eyebrows",
-            component: (
-              <ServiceSection
-                section={{ title: "Eye Brows", services: services.services }}
-                onSelected={handleChange}
-              />
-            ),
-          },
-          {
-            text: "Wax",
-            component: (
-              <ServiceSection
-                section={{ title: "Wax", services: services.services }}
-                onSelected={handleChange}
-              />
-            ),
-          },
-          {
-            text: "Nails",
-            component: (
-              <ServiceSection
-                section={{ title: "Nail", services: services.services }}
-                onSelected={handleChange}
-              />
-            ),
-          },
-          {
-            text: "Massage",
-            component: (
-              <div className="mb-20">
-                <ServiceSection
-                  section={{ title: "Massage", services: services.services }}
-                  onSelected={handleChange}
-                />
-              </div>
-            ),
-          },
-        ]}
-        selectedServices={selectedServices}
-      />
+      {services.length > 0 && <ScrollSpyTabs tabsInScroll={services} />}
     </div>
   );
 }

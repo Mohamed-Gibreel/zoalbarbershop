@@ -1,60 +1,41 @@
 import React, { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { solid } from "@fortawesome/fontawesome-svg-core/import.macro";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import StaffCard from "./components/staff_card";
+import { selectedServices as selectedServicesSelector } from "../../features/booking/bookingSlice";
 
 export default function SelectStaff() {
-  const [staff, setStaff] = useState([
-    {
-      id: "1",
-      title: "Adil Gibreel",
-      rating: 4.5,
-    },
-    {
-      id: "2",
-      title: "Mohamed Gibreel",
-      rating: 2.5,
-    },
-    {
-      id: "3",
-      title: "Husam Gibreel",
-      rating: 4.5,
-    },
-    {
-      id: "4",
-      title: "Ghassan Gibreel",
-      rating: 3.5,
-    },
-  ]);
-  const StaffCard = (props) => {
-    const {
-      staff: { title, description, rating },
-    } = props;
-    return (
-      <Link to="/select-date">
-        <div className="w-screen cursor-pointer hover:bg-[rgb(242,242,242)] transition ease-in-out duration-300 delay-0">
-          <div className="w-[90%] mx-auto h-24 flex items-center gap-x-6 border-b">
-            <div className="h-[56px] w-[56px] bg-red-50 rounded-full"></div>
-            <div className="flex grow">
-              <div className="flex flex-col grow">
-                <span className="font-bold text-lg">
-                  {title ?? "Zool Mohammed"}
-                </span>
-                <span className="font-normal text-secondary-grey">
-                  {description ?? "Expert in all hair types"}
-                </span>
-              </div>
-            </div>
-            <div>
-              <FontAwesomeIcon icon={solid("star")} color={"#FFC831"} />
-              <span className="pl-2 font-bold text-lg">{rating ?? "4.5"}</span>
-            </div>
-            <FontAwesomeIcon icon={solid("chevron-right")} color={"black"} />
-          </div>
-        </div>
-      </Link>
-    );
+  const selectedServices = useSelector(selectedServicesSelector);
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (selectedServices.length == 0) {
+      return navigate("/");
+    }
+    let allowedStaffs = [];
+    if (selectedServices[0]) {
+      selectedServices[0].allowed_staff.forEach((staff) =>
+        allowedStaffs.push({
+          id: staff.id,
+          title: staff.name,
+          rating: 4.5,
+        })
+      );
+      setStaff(allowedStaffs);
+    }
+    window.addEventListener("beforeunload", alertUser);
+    return () => {
+      window.removeEventListener("beforeunload", alertUser);
+    };
+  }, []);
+  const alertUser = (e) => {
+    e.preventDefault();
+    e.returnValue = "";
   };
+
+  const [staff, setStaff] = useState([]);
+
   return (
     <div
       style={{
@@ -71,12 +52,12 @@ export default function SelectStaff() {
             </Link>
             <span className="text-white font-bold text-xl">Select Staff</span>
           </div>
-          {/* <button>
+          <button>
             <FontAwesomeIcon icon={solid("xmark")} size="xl" color={"white"} />
-          </button> */}
+          </button>
         </div>
       </div>
-      <div>{staff.length > 0 && staff.map((s) => <StaffCard staff={s} />)}</div>
+      {staff.length > 0 && staff.map((s) => <StaffCard key={s.id} staff={s} />)}
     </div>
   );
 }

@@ -8,6 +8,8 @@ import Radium, { StyleRoot } from "radium";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { solid } from "@fortawesome/fontawesome-svg-core/import.macro";
 import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { selectedServices as selectedServicesFromAPI } from "../../features/booking/bookingSlice";
 
 const tabHeight = 69;
 
@@ -22,10 +24,6 @@ const styles = {
   },
 };
 const StyledTabs = withStyles({
-  tab: {
-    minWidth: 600, // a number of your choice
-    width: 600, // a number of your choice
-  },
   indicator: {
     display: "flex",
     justifyContent: "center",
@@ -130,9 +128,9 @@ function useThrottledOnScroll(callback, delay) {
 
 function ScrollSpyTabs(props) {
   const [activeState, setActiveState] = React.useState(null);
-  const { tabsInScroll, selectedServices } = props;
+  const { tabsInScroll } = props;
 
-  const [sum, setSum] = React.useState(0);
+  const selectedServices = useSelector(selectedServicesFromAPI);
 
   let itemsServer = tabsInScroll.map((tab) => {
     const hash = textToHash(tab.text);
@@ -235,7 +233,7 @@ function ScrollSpyTabs(props) {
                 <div className="font-bold text-lg">
                   AED{" "}
                   {selectedServices.reduce((previousValue, currentValue) => {
-                    return previousValue + currentValue.price;
+                    return previousValue + currentValue.amount;
                   }, 0)}
                 </div>
               </div>

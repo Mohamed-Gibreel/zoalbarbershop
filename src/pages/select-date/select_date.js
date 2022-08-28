@@ -8,24 +8,103 @@ import { fadeIn, fadeOut } from "react-animations";
 import Radium, { StyleRoot } from "radium";
 import moment from "moment";
 import { Link } from "react-router-dom";
+import DateTile from "./components/date_tile";
+import {
+  selectedStaff as selectedStaffSelector,
+  selectedServices as selectedServicesSelector,
+} from "../../features/booking/bookingSlice";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 export default function SelectDate() {
   const [showDateCalendar, setShowDateCalendar] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [availableTimings, setAvailableTimings] = useState([
     {
-      time: "4:30 AM",
+      time: selectedDate,
     },
     {
-      time: "12:30 PM",
+      time: selectedDate,
     },
     {
-      time: "2:30 PM",
+      time: selectedDate,
     },
     {
-      time: "4:30 PM",
+      time: selectedDate,
     },
   ]);
+
+  const navigate = useNavigate();
+  const selectedServices = useSelector(selectedServicesSelector);
+
+  function returnTimesInBetween(start, end) {
+    var timesInBetween = [];
+
+    var startH = parseInt(start.split(":")[0]);
+    var startM = parseInt(start.split(":")[1]);
+    var endH = parseInt(end.split(":")[0]);
+    var endM = parseInt(end.split(":")[1]);
+
+    if (startM == 30) startH++;
+
+    for (var i = startH; i < endH; i++) {
+      timesInBetween.push(i < 10 ? "0" + i + ":00" : i + ":00");
+      timesInBetween.push(i < 10 ? "0" + i + ":30" : i + ":30");
+    }
+
+    timesInBetween.push(endH + ":00");
+    if (endM == 30) timesInBetween.push(endH + ":30");
+
+    // return timesInBetween.map(getGenTime);
+    return timesInBetween;
+  }
+
+  let getGenTime = (timeString) => {
+    let H = +timeString.substr(0, 2);
+    let h = H % 12 || 12;
+    let ampm = H < 12 ? " AM" : " PM";
+    return (timeString = h + timeString.substr(2, 3) + ampm);
+  };
+
+  const getDates = () => {
+    let fromtime = "8:00:00";
+    let totime = "16:00:00";
+    let finalDates = [];
+    returnTimesInBetween(fromtime, totime).forEach((date) => {
+      //TODO: Check if time lands between any booked slots
+      var d = new Date(
+        Date.UTC(
+          selectedDate.getFullYear(),
+          selectedDate.getMonth(),
+          selectedDate.getDate(),
+          parseInt(date.split(":")[0]),
+          parseInt(date.split(":")[1])
+        )
+      );
+      finalDates.push(d);
+    });
+    setAvailableTimings(finalDates);
+  };
+
+  useEffect(() => {
+    if (selectedServices.length == 0) {
+      return navigate("/");
+    }
+    window.addEventListener("beforeunload", alertUser);
+    return () => {
+      window.removeEventListener("beforeunload", alertUser);
+    };
+  }, []);
+
+  useEffect(() => {
+    getDates();
+  }, [selectedDate]);
+
+  const alertUser = (e) => {
+    e.preventDefault();
+    e.returnValue = "";
+  };
+  const selectedStaff = useSelector(selectedStaffSelector);
 
   const handleDateChange = (value) => {
     setSelectedDate(value);
@@ -43,22 +122,6 @@ export default function SelectDate() {
     },
   };
 
-  const DateTile = (props) => {
-    const {
-      timing: { time },
-    } = props;
-    return (
-      <Link to="/confirm-number">
-        <div className="w-screen cursor-pointer hover:bg-[rgb(242,242,242)] transition ease-in-out duration-300 delay-0">
-          <div className="w-[90%] h-24 mx-auto flex items-center justify-between gap-x-6 border-b">
-            <div className="font-bold">{time}</div>
-            <FontAwesomeIcon icon={solid("chevron-right")} color={"black"} />
-          </div>
-        </div>
-      </Link>
-    );
-  };
-
   return (
     <div
       style={{
@@ -74,7 +137,7 @@ export default function SelectDate() {
               <FontAwesomeIcon icon={solid("chevron-left")} color={"white"} />
             </Link>
             <span className="text-white font-bold text-xl">
-              Select Date with STAFF
+              Select Date with {selectedStaff.title ?? "STAA"}
             </span>
           </div>
           {/* <button>
@@ -133,7 +196,9 @@ export default function SelectDate() {
         </StyleRoot>
       )}
       {availableTimings.length > 0 &&
-        availableTimings.map((timing) => <DateTile timing={timing} />)}
+        availableTimings.map((timing) => (
+          <DateTile key={Math.random()} timing={timing} />
+        ))}
     </div>
   );
 }
